@@ -39,11 +39,32 @@ function handleFormAddCat(e) {
   });
 }
 
-api.getAllCats().then(({ data }) => {
-  data.forEach(function (catData) {
-    createCat(catData);
-  });
-});
+function setDataRefresh(minutes) {
+  const setTime = new Date(new Date().getTime() + minutes * 60000);
+  localStorage.setItem('catsRefresh', setTime);
+}
+
+function checkLocalStorage() {
+  const localData = JSON.parse(localStorage.getItem('cats'));
+  const getTimeExpires = localStorage.getItem('catsRefresh');
+
+  if (localData && localData.length && new Date() < new Date(getTimeExpires)) {
+    localData.forEach(function (catData) {
+      createCat(catData);
+    });
+  } else {
+    api.getAllCats().then(({ data }) => {
+      data.forEach(function (catData) {
+        createCat(catData);
+      });
+
+      localStorage.setItem('cats', JSON.stringify(data));
+      setDataRefresh(1);
+    });
+  }
+}
+
+checkLocalStorage();
 
 btnOpenPopupForm.addEventListener('click', () => popupAddCat.open());
 formCatAdd.addEventListener('submit', handleFormAddCat);
