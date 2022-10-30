@@ -22,21 +22,27 @@ function serializeForm(elements) {
   return formData;
 }
 
+function createCat(data) {
+  const cardInstance = new Card(data, '#card-template');
+  const newCardElement = cardInstance.getElement();
+  cardsContainer.append(newCardElement);
+}
+
 function handleFormAddCat(e) {
   e.preventDefault();
   const elementsFormCat = [...formCatAdd.elements];
   const dataFromForm = serializeForm(elementsFormCat);
-  const cardInstance = new Card(dataFromForm, '#card-template');
-  const newCardElement = cardInstance.getElement();
-  cardsContainer.append(newCardElement);
 
-  popupAddCat.close();
+  api.addNewCat(dataFromForm).then(() => {
+    createCat(dataFromForm);
+    popupAddCat.close();
+  });
 }
 
-cats.forEach(function (catData) {
-  const cardInstance = new Card(catData, '#card-template');
-  const newCardElement = cardInstance.getElement();
-  cardsContainer.append(newCardElement);
+api.getAllCats().then(({ data }) => {
+  data.forEach(function (catData) {
+    createCat(catData);
+  });
 });
 
 btnOpenPopupForm.addEventListener('click', () => popupAddCat.open());
