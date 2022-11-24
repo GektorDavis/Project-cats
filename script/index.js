@@ -46,7 +46,7 @@ function handleFormAddCat(e) {
 
   api.addNewCat(dataFromForm).then(() => {
     createCat(dataFromForm);
-    updateLocalStorage(data, { type: 'ADD_CAT' });
+    updateLocalStorage(dataFromForm, { type: 'ADD_CAT' });
     popupAddCat.close();
   });
 }
