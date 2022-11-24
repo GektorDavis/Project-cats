@@ -28,6 +28,26 @@ class Api {
       headers: this._headers,
     }).then(this._onResponce);
   }
+
+  updateCatById(idCat, data) {
+    return fetch(`${this._url}/update/${idCat}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      headers: this._headers,
+    }).then(this._onResponce);
+  }
+
+  getCatById(idCat) {
+    return fetch(`${this._url}/show/${idCat}`, { method: 'GET' }).then(
+      this._onResponce
+    );
+  }
+
+  deleteCatById(idCat) {
+    return fetch(`${this._url}/delete/${idCat}`, { method: 'DELETE' }).then(
+      this._onResponce
+    );
+  }
 }
 
 export const api = new Api(CONFIG_API);

@@ -1,8 +1,10 @@
 import { api } from './api.js';
 import { Card } from './card.js';
 import { TIME_LSTORAGE } from './constants.js';
+import { PopupImage } from './popup-image.js';
 import { Popup } from './popup.js';
 import { serializeForm, setDataRefresh } from './utilits.js';
+import { CatInfo } from './cat-info.js';
 
 const cardsContainer = document.querySelector('.cards');
 const btnOpenPopupForm = document.querySelector('#add');
@@ -13,9 +15,26 @@ const popupAddCat = new Popup('popup-add-cats');
 popupAddCat.setEventListener();
 const popupLogin = new Popup('popup-login');
 popupLogin.setEventListener();
+const popupCatInfo = new Popup('popup-cat-info');
+popupCatInfo.setEventListener();
+const popupImage = new PopupImage('popup-image');
+popupImage.setEventListener();
+const catInfoInstance = new CatInfo(
+  '#cat-info-template',
+  handleEdit,
+  handleLike,
+  handleDelete
+);
+const catInfoElement = catInfoInstance.getElement();
 
 function createCat(data) {
-  const cardInstance = new Card(data, '#card-template');
+  const cardInstance = new Card(
+    data,
+    '#card-template',
+    handleCatTitle,
+    handleCatImage,
+    handleLike
+  );
   const newCardElement = cardInstance.getElement();
   cardsContainer.append(newCardElement);
 }
@@ -74,11 +93,57 @@ function updateLocalStorage(data, action) {
       return;
     case 'DELETE_CAT':
       const newStorage = oldStorage.filter((cat) => cat.id !== data.id);
-      localStorage.setItem('cats', JSON.stringify(data));
+      localStorage.setItem('cats', JSON.stringify(newStorage));
+      return;
+    case 'EDIT_CAT':
+      const editStorage = oldStorage.map((cat) =>
+        cat.id === data.id ? data : cat
+      );
+      localStorage.setItem('cats', JSON.stringify(editStorage));
       return;
     default:
       break;
   }
+}
+
+function handleCatTitle(catInstance) {
+  catInfoInstance.setData(catInstance);
+  popupCatInfo.setContent(catInfoElement);
+  popupCatInfo.open();
+}
+
+function handleCatImage(dataCard) {
+  popupImage.open(dataCard);
+}
+
+function handleLike(data, catInstance) {
+  const { id, favourite } = data;
+  api.updateCatById(id, { favourite }).then(() => {
+    if (catInstance) {
+      catInstance.setData(data);
+      catInstance.updateView();
+    }
+    updateLocalStorage(data, { type: 'EDIT_CAT' });
+  });
+}
+
+function handleDelete(catInstance) {
+  api.deleteCatById(catInstance.getId()).then(() => {
+    catInstance.deleteView();
+    updateLocalStorage(catInstance.getData(), { type: 'DELETE_CAT' });
+    popupCatInfo.close();
+  });
+}
+
+function handleEdit(catInstance, data) {
+  const { age, description, name, id } = data;
+
+  api.updateCatById(id, { age, description, name }).then(() => {
+    catInstance.setData(data);
+    catInstance.updateView();
+    updateLocalStorage(data, { type: 'EDIT_CAT' });
+    popupCatInfo.close();
+  });
 }
 
 btnOpenPopupLogin.addEventListener('click', () => popupLogin.open());
